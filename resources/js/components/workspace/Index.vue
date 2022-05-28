@@ -37,11 +37,20 @@
     </b-modal>
 
     <!-- MODAL CREATE TASK -->
-    <b-modal id="modal-create-task" title="Create Task" centered size="xl" hide-footer>
-      <b-alert :variant="alertVariant" :show="showAlert">{{ alertMsg }}</b-alert>
+    <b-modal
+      id="modal-create-task"
+      title="Create Task"
+      centered
+      size="xl"
+      hide-footer
+    >
+      <b-alert :variant="alertVariantTask" :show="showAlertTask">{{
+        alertMsgTask
+      }}</b-alert>
       <b-table
         hover
         selectable
+        show-empty
         @row-selected="onRowSelected"
         :select-mode="selectMode"
         :busy="isBusy"
@@ -49,25 +58,29 @@
         :fields="fieldsWorkspace"
       >
         <template #table-busy>
-            <div class="text-center text-danger my-2">
+          <div class="text-center text-danger my-2">
             <b-spinner class="align-middle"></b-spinner>
             <strong>Loading...</strong>
-            </div>
+          </div>
         </template>
 
         <template #cell(workspaceStatus)="data">
-            <b-badge variant="success" v-if="data.item.workspaceStatus === 'ACTIVE'">{{ data.item.workspaceStatus }}</b-badge>
+          <b-badge
+            variant="success"
+            v-if="data.item.workspaceStatus === 'ACTIVE'"
+            >{{ data.item.workspaceStatus }}</b-badge
+          >
 
-            <b-badge variant="danger" v-else>{{ data.item.workspaceStatus }}</b-badge>
+          <b-badge variant="danger" v-else>{{
+            data.item.workspaceStatus
+          }}</b-badge>
         </template>
       </b-table>
       <h4 v-if="selected.length !== 0">
-          You have selected: {{ selected[0].workspaceName }}
+        You have selected: {{ selected[0].workspaceName }}
       </h4>
-      <h4 v-else>
-          You have selected: none
-      </h4>
-      <hr>
+      <h4 v-else>You have selected: none</h4>
+      <hr />
       <b-row>
         <b-col>
           <b-form-group
@@ -95,7 +108,11 @@
             label="Enter task start date"
             label-for="input-1"
           >
-            <b-form-datepicker id="input-1" v-model="taskForm.durationFromDate" class="mb-2"></b-form-datepicker>
+            <b-form-datepicker
+              id="input-1"
+              v-model="taskForm.durationFromDate"
+              class="mb-2"
+            ></b-form-datepicker>
           </b-form-group>
         </b-col>
         <b-col>
@@ -116,7 +133,11 @@
             label="Enter task end date"
             label-for="input-1"
           >
-            <b-form-datepicker id="input-1" v-model="taskForm.durationToDate" class="mb-2"></b-form-datepicker>
+            <b-form-datepicker
+              id="input-1"
+              v-model="taskForm.durationToDate"
+              class="mb-2"
+            ></b-form-datepicker>
           </b-form-group>
         </b-col>
         <b-col>
@@ -128,7 +149,6 @@
             <b-time v-model="taskForm.durationToTime" locale="en"></b-time>
           </b-form-group>
         </b-col>
-
       </b-row>
       <b-button @click="submitDataTask" :disabled="selected.length === 0"
         >Submit</b-button
@@ -140,27 +160,89 @@
       id="modal-view-data"
       title="View Workspace & Task"
       centered
-      size="xl"
+      ok-only
+      size="huge"
     >
+      <b-row>
+        <b-col lg="6">
+          <b-input-group size="md">
+            <b-form-input
+              id="filter-input"
+              v-model="filter"
+              type="search"
+              placeholder="Type to Search"
+            ></b-form-input>
+
+            <b-input-group-append>
+              <b-button
+                variant="primary"
+                :disabled="!filter"
+                @click="filter = ''"
+              >
+                Clear
+              </b-button>
+            </b-input-group-append>
+          </b-input-group>
+        </b-col>
+
+        <b-col class="text-right">
+          <div id="tickets-table_length" class="dataTables_length">
+            <label class="d-inline-flex align-items-center">
+              Show&nbsp;
+              <b-form-select
+                v-model="perPage"
+                size="md"
+                :options="pageOptions"
+              ></b-form-select
+              >&nbsp;entries
+            </label>
+          </div>
+        </b-col>
+      </b-row>
+
       <b-table
         hover
+        show-empty
         :busy="isBusy"
         :items="tasksList"
         :fields="fieldsTask"
+        :filter="filter"
+        @filtered="onFiltered"
+        :per-page="perPage"
+        :current-page="currentPage"
       >
         <template #table-busy>
-            <div class="text-center text-danger my-2">
+          <div class="text-center text-danger my-2">
             <b-spinner class="align-middle"></b-spinner>
             <strong>Loading...</strong>
-            </div>
+          </div>
         </template>
 
         <template #cell(taskStatus)="data">
-            <b-badge variant="success" v-if="data.item.taskStatus === 'ACTIVE'">{{ data.item.taskStatus }}</b-badge>
+          <b-badge
+            variant="success"
+            v-if="data.item.taskStatus === 'COMPLETED'"
+            >{{ data.item.taskStatus }}</b-badge
+          >
 
-            <b-badge variant="danger" v-else>{{ data.item.taskStatus }}</b-badge>
+          <b-badge variant="danger" v-else>{{ data.item.taskStatus }}</b-badge>
+        </template>
+
+        <template #cell(action)="data">
+          <b-form-checkbox v-model="checked[data.item.idx]" name="check-button" switch @change="snitched(data.item.id_task)"
+          :disabled="tasksList[data.item.idx].taskStatus === 'COMPLETED'">
+            <!-- Switch Checkbox <b>(Checked: {{ checked }})</b> -->
+          </b-form-checkbox>
         </template>
       </b-table>
+      <b-pagination
+        v-model="currentPage"
+        :total-rows="totalRows"
+        :per-page="perPage"
+        class="float-right"
+      ></b-pagination>
+
+      <b-button @click="updateTask" variant="primary">Submit</b-button>
     </b-modal>
 
     <b-row>
@@ -207,7 +289,7 @@
       <!-- VIEW WORKSPACE AND TASK -->
       <b-col>
         <b-card
-          title="View Workspace/Task"
+          title="View Workspace & Task"
           img-src="https://picsum.photos/600/300/?image=20"
           img-alt="Image"
           img-top
@@ -254,23 +336,34 @@ export default {
   },
   data() {
     return {
-      selectMode: 'single',
+      totalRows: 1,
+      filter: null,
+      currentPage: 1,
+      perPage: 3,
+      pageOptions: [3, 25, 50, 100],
+
+      checked: [],
+
+      selectMode: "single",
       selected: [],
       isBusy: false,
       alertMsg: null,
       showAlert: false,
       alertVariant: null,
+      alertMsgTask: null,
+      showAlertTask: false,
+      alertVariantTask: null,
       workspaceForm: {
         name: "",
       },
       taskForm: {
-        name: '',
-        durationFromDate: '',
-        durationFromTime: '',
-        durationToDate: '',
-        durationToTime: '',
-        workspaceId: '',
-        userId: ''
+        name: "",
+        durationFromDate: "",
+        durationFromTime: "",
+        durationToDate: "",
+        durationToTime: "",
+        workspaceId: "",
+        userId: "",
       },
       fieldsWorkspace: [
         {
@@ -290,7 +383,6 @@ export default {
       fieldsTask: [
         {
           key: "workspaceName",
-          sortable: true,
         },
         {
           key: "taskName",
@@ -298,19 +390,30 @@ export default {
         },
         {
           key: "taskDurationFrom",
+          label: "From",
           sortable: true,
         },
         {
           key: "taskDurationTo",
+          label: "To",
           sortable: true,
         },
         {
           key: "taskStatus",
+          label: "Status",
           sortable: true,
         },
         {
-          key: "timeLeft"
+          key: "timeLeft",
         },
+        {
+          key: "taskCompletionDatetime",
+          label: "Completed Date",
+        },
+        {
+          key: "action",
+          label: "Action",
+        }
       ],
       fields: [
         {
@@ -339,7 +442,8 @@ export default {
         { isActive: true, age: 38, first_name: "Jami", last_name: "Carney" },
       ],
       workspaceList: [],
-      tasksList: []
+      tasksList: [],
+      selectedVal: []
     };
   },
   async created() {
@@ -347,10 +451,22 @@ export default {
     await this.getTasks();
   },
   methods: {
+    snitched(val) {
+        console.log(val)
+        if (!this.selectedVal.includes(val))
+            this.selectedVal.push(val)
+        else if (this.selectedVal.includes(val))
+            this.selectedVal.pop(val)
+    },
+    onFiltered(filteredItems) {
+      // Trigger pagination to update the number of buttons/pages due to filtering
+      this.totalRows = filteredItems.length;
+      this.currentPage = 1;
+    },
     onRowSelected(items) {
-      this.selected = items
-      this.taskForm.userId = parseInt(this.selected[0].userId)
-      this.taskForm.workspaceId = this.selected[0].workspaceId
+      this.selected = items;
+      this.taskForm.userId = parseInt(this.selected[0].userId);
+      this.taskForm.workspaceId = this.selected[0].workspaceId;
     },
     format_date(value) {
       if (value) {
@@ -358,7 +474,7 @@ export default {
       }
     },
     async getWorkspaces() {
-      this.workspaceList.length = 0
+      this.workspaceList.length = 0;
       await axios
         .get("/api/get-workspace-list")
         .then((res) => {
@@ -374,49 +490,77 @@ export default {
             );
           }
 
-          this.isBusy = false
+          this.isBusy = false;
         })
         .catch((error) => {
           console.log(error);
         });
     },
     async getTasks() {
-      this.tasksList.length = 0
+      this.tasksList.length = 0;
       await axios
         .get("/api/get-workspace-task-list")
         .then((res) => {
-          console.log(res.data)
+          console.log(res.data);
+          var count = 0
           for (let i = 0; i < res.data.length; i++) {
+            this.checked.push(false)
+
             // var start = moment(new Date().toISOString().slice(0, 10), "YYYY-MM-DD")
             // var end = moment(res.data[i].taskDurationTo, "YYYY-MM-DD")
 
             // var startTime = moment(res.data[i].taskDurationFrom, "YYYY-MM-DD hh:mm:ss")
-            var endTime = moment(res.data[i].taskDurationTo, "YYYY-MM-DD hh:mm:ss")
+            var endTime = moment(
+              res.data[i].taskDurationTo,
+              "YYYY-MM-DD hh:mm:ss"
+            );
 
-            var loaaa = moment().format("YYYY-MM-DD hh:mm:ss")
-            console.log(moment.duration(endTime.diff(loaaa)))
+            var loaaa = moment().format("YYYY-MM-DD hh:mm:ss");
+            console.log(moment.duration(endTime.diff(loaaa)));
 
             this.tasksList.push(
               Object.assign(
+                { idx: count++ },
+                { id_task: res.data[i].id },
                 { workspaceName: res.data[i].workspaceName },
                 { taskName: res.data[i].taskName },
-                { taskDurationFrom: this.format_date(res.data[i].taskDurationFrom) },
-                { taskDurationTo: this.format_date(res.data[i].taskDurationTo) },
+                {
+                  taskDurationFrom: this.format_date(
+                    res.data[i].taskDurationFrom
+                  ),
+                },
+                {
+                  taskDurationTo: this.format_date(res.data[i].taskDurationTo),
+                },
                 { taskStatus: res.data[i].taskStatus },
-                { timeLeft: moment.duration(endTime.diff(loaaa))._data.days + ' days, ' + moment.duration(endTime.diff(loaaa))._data.minutes + ' minutes remaining.' }
+                { taskCompletionDatetime: res.data[i].taskCompletionDatetime },
+                {
+                  timeLeft:
+                    moment.duration(endTime.diff(loaaa))._data.days +
+                    " days, " +
+                    moment.duration(endTime.diff(loaaa))._data.minutes +
+                    " minutes remaining.",
+                }
               )
             );
+
+            if (this.tasksList[i].taskStatus === 'INCOMPLETE') {
+                this.checked[i] = false
+            } else {
+                this.checked[i] = true
+            }
+            this.totalRows = this.tasksList.length
           }
 
-        // var start = moment(res.data[0].taskDurationFrom, "YYYY-MM-DD")
-        // var end = moment(res.data[0].taskDurationTo, "YYYY-MM-DD")
-        // console.log(moment.duration(end.diff(start)).asDays())
+          // var start = moment(res.data[0].taskDurationFrom, "YYYY-MM-DD")
+          // var end = moment(res.data[0].taskDurationTo, "YYYY-MM-DD")
+          // console.log(moment.duration(end.diff(start)).asDays())
 
-        // var startTime = moment(res.data[0].taskDurationFrom, "hh:mm:ss")
-        // var endTime = moment(res.data[0].taskDurationTo, "hh:mm:ss")
-        // console.log(moment.duration(endTime.diff(startTime)).asMinutes())
+          // var startTime = moment(res.data[0].taskDurationFrom, "hh:mm:ss")
+          // var endTime = moment(res.data[0].taskDurationTo, "hh:mm:ss")
+          // console.log(moment.duration(endTime.diff(startTime)).asMinutes())
 
-          this.isBusy = false
+          this.isBusy = false;
         })
         .catch((error) => {
           console.log(error);
@@ -446,13 +590,13 @@ export default {
               this.alertVariant = "success";
               this.showAlert = true;
               this.alertMsg = response.data[1];
-              this.isBusy = false
+              this.isBusy = false;
               this.getWorkspaces();
             } else if (response.data[0] === "Failed") {
               this.alertVariant = "danger";
               this.showAlert = true;
               this.alertMsg = response.data[1];
-              this.isBusy = false
+              this.isBusy = false;
             }
           }.bind(this)
         )
@@ -468,7 +612,7 @@ export default {
         task_to_date: this.taskForm.durationToDate,
         task_to_time: this.taskForm.durationToTime,
         task_name: this.taskForm.name,
-        task_status: "ACTIVE",
+        task_status: "INCOMPLETE",
         userid: this.taskForm.userId,
         workspaceid: this.taskForm.workspaceId,
       });
@@ -487,16 +631,53 @@ export default {
         .then(
           function (response) {
             if (response.data[0] === "Success") {
+              this.alertVariantTask = "success";
+              this.showAlertTask = true;
+              this.alertMsgTask = response.data[1];
+              this.isBusy = false;
+              this.getTasks();
+            } else if (response.data[0] === "Failed") {
+              this.alertVariantTask = "danger";
+              this.showAlertTask = true;
+              this.alertMsgTask = response.data[1];
+              this.isBusy = false;
+            }
+          }.bind(this)
+        )
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    async updateTask() {
+      var data = JSON.stringify({
+        task_status: "COMPLETED",
+        task_completion_datetime: moment(new Date().toLocaleString()).format("YYYY-MM-DD hh:mm:ss"),
+      });
+
+      var config = {
+        method: "put",
+        mode: "cors",
+        url: `/update-workspace-task/` + this.selectedVal[0],
+        headers: {
+          "Content-type": "application/json",
+        },
+        data: data,
+      };
+
+      await axios(config)
+        .then(
+          function (response) {
+            if (response.data[0] === "Success") {
               this.alertVariant = "success";
               this.showAlert = true;
               this.alertMsg = response.data[1];
-              this.isBusy = false
-            //   this.getWorkspaces();
+              this.isBusy = false;
+              this.getTasks();
             } else if (response.data[0] === "Failed") {
               this.alertVariant = "danger";
               this.showAlert = true;
               this.alertMsg = response.data[1];
-              this.isBusy = false
+              this.isBusy = false;
             }
           }.bind(this)
         )
@@ -509,4 +690,8 @@ export default {
 </script>
 
 <style>
+.modal .modal-huge {
+  max-width: 1700px;
+  width: 1700px;
+}
 </style>

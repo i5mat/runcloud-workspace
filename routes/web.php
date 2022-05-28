@@ -31,3 +31,4 @@ Route::get('{any}', [App\Http\Controllers\WorkspaceController::class, 'displayHo
 
 Route::post('/insert-workspace', [App\Http\Controllers\WorkspaceController::class, 'insertData']);
 Route::post('/insert-workspace-task', [App\Http\Controllers\WorkspaceController::class, 'insertDataTask']);
+Route::put('/update-workspace-task/{id}', [App\Http\Controllers\WorkspaceController::class, 'updateDataTask']);

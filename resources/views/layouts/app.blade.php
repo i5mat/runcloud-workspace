@@ -35,7 +35,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="margin-left: 930px">
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="margin-left: 840px">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
 

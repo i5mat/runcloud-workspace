@@ -12,7 +12,8 @@ class TaskController extends Controller
     public function getWorkspaceTaskList()
     {
         $task = DB::table('tasks')
-        ->select('workspaces.workspaceName', 'taskName', 'taskDurationFrom', 'taskDurationTo', 'taskStatus')
+        ->select('workspaces.workspaceName', 'taskName', 'taskDurationFrom', 'taskDurationTo',
+        'taskStatus', 'taskCompletionDatetime', 'tasks.id')
         ->join('workspaces', 'tasks.task_workspaceId', '=', 'workspaces.id')
         ->where('task_userId', '=', Auth::id())
         ->get();

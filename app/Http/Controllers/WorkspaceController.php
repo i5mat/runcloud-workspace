@@ -71,4 +71,25 @@ class WorkspaceController extends Controller
 
         return response()->json([$status, $message, $workspaceTask]);
     }
+
+    public function updateDataTask($id, Request $request) {
+        // dd($request->all());
+        if ($request->get('task_completion_datetime') !== null) {
+            $findData = Task::findOrFail($id);
+
+            $findData->taskStatus = $request->get('task_status');
+            $findData->taskCompletionDatetime = $request->get('task_completion_datetime');
+
+            $status = 'Success';
+            $message = 'Task for a workspace is updated!';
+
+            $findData->save();
+        } else {
+            $status = 'Failed';
+            $message = 'Failed to update data!';
+            $findData = [];
+        }
+
+        return response()->json([$status, $message, $findData]);
+    }
 }
