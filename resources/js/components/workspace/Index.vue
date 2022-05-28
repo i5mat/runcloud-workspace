@@ -608,6 +608,8 @@ export default {
     await this.getWorkspaces();
     await this.getTasks();
     this.blockDate();
+
+    window.location.href = "https://rc-assessment.herokuapp.com/workspace-home";
   },
   methods: {
     blockDate() {
