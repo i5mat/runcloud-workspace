@@ -24,8 +24,10 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 // RETURN API
 Route::get('/api/get-workspace-list', [App\Http\Controllers\WorkspaceController::class, 'getWorkspaceList']);
+Route::get('/api/get-workspace-task-list', [App\Http\Controllers\TaskController::class, 'getWorkspaceTaskList']);
 
 // RETURN VIEW
 Route::get('{any}', [App\Http\Controllers\WorkspaceController::class, 'displayHome'])->where('any', '.*');
 
 Route::post('/insert-workspace', [App\Http\Controllers\WorkspaceController::class, 'insertData']);
+Route::post('/insert-workspace-task', [App\Http\Controllers\WorkspaceController::class, 'insertDataTask']);

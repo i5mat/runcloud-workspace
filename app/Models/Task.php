@@ -13,7 +13,7 @@ class Task extends Model
         'taskName',
         'taskDurationFrom',
         'taskDurationTo',
-        'taskStatus ',
+        'taskStatus',
         'task_userId',
         'task_workspaceId',
         'created_at',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Task;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,5 +46,29 @@ class WorkspaceController extends Controller
         }
 
         return response()->json([$status, $message, $workspace]);
+    }
+
+    public function insertDataTask(Request $request) {
+        if ($request->get('task_name') !== null) {
+            $workspaceTask = new Task([
+                'taskName' => $request->get('task_name'),
+                'taskDurationFrom' => $request->get('task_from_date').' '.$request->get('task_from_time'),
+                'taskDurationTo' => $request->get('task_to_date').' '.$request->get('task_to_time'),
+                'taskStatus' => $request->get('task_status'),
+                'task_userId' => $request->get('userid'),
+                'task_workspaceId' => $request->get('workspaceid')
+            ]);
+
+            $status = 'Success';
+            $message = 'New task for a workspace is inserted!';
+
+            $workspaceTask->save();
+        } else {
+            $status = 'Failed';
+            $message = 'Failed to insert data!';
+            $workspaceTask = [];
+        }
+
+        return response()->json([$status, $message, $workspaceTask]);
     }
 }

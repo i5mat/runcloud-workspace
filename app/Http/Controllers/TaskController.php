@@ -4,9 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
+    public function getWorkspaceTaskList()
+    {
+        $task = DB::table('tasks')
+        ->select('workspaces.workspaceName', 'taskName', 'taskDurationFrom', 'taskDurationTo', 'taskStatus')
+        ->join('workspaces', 'tasks.task_workspaceId', '=', 'workspaces.id')
+        ->where('task_userId', '=', Auth::id())
+        ->get();
+
+        return response()->json($task);
+    }
+
     /**
      * Display a listing of the resource.
      *
