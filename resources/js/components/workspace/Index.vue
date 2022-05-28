@@ -609,7 +609,10 @@ export default {
     await this.getTasks();
     this.blockDate();
 
-    window.location.href = "https://rc-assessment.herokuapp.com/workspace-home";
+    // window.location.href = "https://rc-assessment.herokuapp.com/workspace-home";
+    if (this.$router.history.current.path !== '/workspace-home') {
+      window.location.href = "https://rc-assessment.herokuapp.com/workspace-home";
+    }
   },
   methods: {
     blockDate() {
