@@ -1,5 +1,49 @@
 <template>
   <div class="container">
+    <div class="mt-1">
+      <h4>Your Workspace</h4>
+      <h6>Here we are going to list out all of the workspaces.</h6>
+
+      <b-row v-if="workspaceList.length !== 0">
+        <b-col
+          v-for="wL in workspaceList"
+          :key="wL.id"
+          lg="6"
+          class="mb-2"
+          style="width: 100%"
+        >
+          <b-card
+            bg-variant="dark"
+            text-variant="white"
+            :title="wL.workspaceName"
+          >
+            <b-card-text>
+              Created on,<br />
+              {{ wL.created_at }}
+            </b-card-text>
+          </b-card>
+        </b-col>
+      </b-row>
+      <b-row v-else>
+        <b-col lg="6" class="mb-2" style="width: 100%">
+          <b-card
+            bg-variant="dark"
+            text-variant="white"
+            :title="'Create New Workspace'"
+          >
+            <b-card-text>
+              Please create a new workspace, in order to display here.
+            </b-card-text>
+          </b-card>
+        </b-col>
+      </b-row>
+    </div>
+
+    <div class="mt-4">
+      <h4 class="mt-3">Options</h4>
+      <h6>Here are your options, feel free to choose over here.</h6>
+    </div>
+
     <!-- MODAL CREATE WORKSPACE -->
     <b-modal
       id="modal-create-workspace"
@@ -31,7 +75,12 @@
         </b-col>
       </b-row>
 
-      <b-button @click="submitData" :disabled="workspaceForm.name.length < 4" variant="primary" pill style="width: 100%"
+      <b-button
+        @click="submitData"
+        :disabled="workspaceForm.name.length < 4"
+        variant="primary"
+        pill
+        style="width: 100%"
         >Submit</b-button
       >
     </b-modal>
@@ -47,18 +96,56 @@
       <b-alert show variant="success">
         <h4 class="alert-heading">Steps to create task</h4>
         <p>
-          1. Choose one of the workspace that you have created.<br>
-          2. Enter your desired task name, task start and end datetime. <br>
+          1. Choose one of the workspace that you have created.<br />
+          2. Enter your desired task name, task start and end datetime. <br />
           3. Lastly, click submit and you're good to go!
         </p>
         <hr />
         <p class="mb-0">
-          The button for submit will only be enabled if all of the fields is filled in.
+          The button for submit will only be enabled if all of the fields is
+          filled in.
         </p>
       </b-alert>
       <b-alert :variant="alertVariantTask" :show="showAlertTask">{{
         alertMsgTask
       }}</b-alert>
+      <b-row>
+        <b-col lg="6">
+          <b-input-group size="md">
+            <b-form-input
+              id="filter-input"
+              v-model="filterTask"
+              type="search"
+              placeholder="Type to Search"
+            ></b-form-input>
+
+            <b-input-group-append>
+              <b-button
+                variant="primary"
+                :disabled="!filterTask"
+                @click="filterTask = ''"
+              >
+                Clear
+              </b-button>
+            </b-input-group-append>
+          </b-input-group>
+        </b-col>
+
+        <b-col class="text-right">
+          <div id="tickets-table_length" class="dataTables_length">
+            <label class="d-inline-flex align-items-center">
+              Show&nbsp;
+              <b-form-select
+                v-model="perPageTask"
+                size="md"
+                :options="pageOptionsTask"
+              ></b-form-select
+              >&nbsp;entries
+            </label>
+          </div>
+        </b-col>
+      </b-row>
+
       <b-table
         hover
         selectable
@@ -68,6 +155,10 @@
         :busy="isBusy"
         :items="workspaceList"
         :fields="fieldsWorkspace"
+        :filter="filterTask"
+        @filtered="onFilteredTask"
+        :per-page="perPageTask"
+        :current-page="currentPageTask"
       >
         <template #table-busy>
           <div class="text-center text-danger my-2">
@@ -88,86 +179,125 @@
           }}</b-badge>
         </template>
       </b-table>
-      <h4 v-if="selected.length !== 0">
+      <b-pagination
+        v-model="currentPageTask"
+        :total-rows="totalRowsTask"
+        :per-page="perPageTask"
+        class="float-right"
+      ></b-pagination>
+
+      <h5 v-if="selected.length !== 0">
         You have selected: {{ selected[0].workspaceName }}
-      </h4>
-      <h4 v-else>You have selected: none</h4>
+      </h5>
+      <h5 v-else>You have selected: none</h5>
       <hr />
-      <b-row>
-        <b-col>
-          <b-form-group
-            id="fieldset-1"
-            label="Enter your task name"
-            label-for="input-1"
-            valid-feedback="Thank you!"
-            :invalid-feedback="invalidFeedbackTaskName"
-            :state="stateTaskName"
+      <div class="accordion" role="tablist">
+        <b-card no-body class="mb-1">
+          <b-card-header header-tag="header" class="p-1" role="tab">
+            <b-button block v-b-toggle.accordion-1 variant="info"
+              >Click me to insert new task!</b-button
+            >
+          </b-card-header>
+          <b-collapse
+            id="accordion-1"
+            accordion="my-accordion"
+            role="tabpanel"
           >
-            <b-form-input
-              id="input-1"
-              v-model="taskForm.name"
-              :state="stateTaskName"
-              trim
-            ></b-form-input>
-          </b-form-group>
-        </b-col>
-      </b-row>
+            <b-card-body>
+              <b-row>
+                <b-col>
+                  <b-form-group
+                    id="fieldset-1"
+                    label="Enter your task name"
+                    label-for="input-1"
+                    valid-feedback="Thank you!"
+                    :invalid-feedback="invalidFeedbackTaskName"
+                    :state="stateTaskName"
+                  >
+                    <b-form-input
+                      id="input-1"
+                      v-model="taskForm.name"
+                      :state="stateTaskName"
+                      trim
+                    ></b-form-input>
+                  </b-form-group>
+                </b-col>
+              </b-row>
 
-      <b-row>
-        <b-col>
-          <b-form-group
-            id="fieldset-1"
-            label="Enter task start date"
-            label-for="input-1"
-          >
-            <b-form-datepicker
-              id="input-1"
-              v-model="taskForm.durationFromDate"
-              class="mb-2"
-            ></b-form-datepicker>
-          </b-form-group>
-        </b-col>
-        <b-col>
-          <b-form-group
-            id="fieldset-1"
-            label="Enter task start time"
-            label-for="input-1"
-          >
-            <b-time v-model="taskForm.durationFromTime" locale="en"></b-time>
-          </b-form-group>
-        </b-col>
-      </b-row>
+              <b-row>
+                <b-col>
+                  <b-form-group
+                    id="fieldset-1"
+                    label="Enter task start date"
+                    label-for="input-1"
+                  >
+                    <b-form-datepicker
+                      id="input-1"
+                      v-model="taskForm.durationFromDate"
+                      :min="min"
+                      locale="en"
+                      class="mb-2"
+                    ></b-form-datepicker>
+                  </b-form-group>
+                </b-col>
+                <b-col>
+                  <b-form-group
+                    id="fieldset-1"
+                    label="Enter task start time"
+                    label-for="input-1"
+                  >
+                    <b-time
+                      v-model="taskForm.durationFromTime"
+                      locale="en"
+                    ></b-time>
+                  </b-form-group>
+                </b-col>
+              </b-row>
 
-      <b-row>
-        <b-col>
-          <b-form-group
-            id="fieldset-1"
-            label="Enter task end date"
-            label-for="input-1"
-          >
-            <b-form-datepicker
-              id="input-1"
-              v-model="taskForm.durationToDate"
-              class="mb-2"
-            ></b-form-datepicker>
-          </b-form-group>
-        </b-col>
-        <b-col>
-          <b-form-group
-            id="fieldset-1"
-            label="Enter task end time"
-            label-for="input-1"
-          >
-            <b-time v-model="taskForm.durationToTime" locale="en"></b-time>
-          </b-form-group>
-        </b-col>
-      </b-row>
-      <b-button @click="submitDataTask" :disabled="selected.length === 0" variant="primary" style="width: 100%" pill
-        >Submit</b-button
-      >
+              <b-row>
+                <b-col>
+                  <b-form-group
+                    id="fieldset-1"
+                    label="Enter task end date"
+                    label-for="input-1"
+                  >
+                    <b-form-datepicker
+                      id="input-1"
+                      v-model="taskForm.durationToDate"
+                      :min="min"
+                      locale="en"
+                      class="mb-2"
+                    ></b-form-datepicker>
+                  </b-form-group>
+                </b-col>
+                <b-col>
+                  <b-form-group
+                    id="fieldset-1"
+                    label="Enter task end time"
+                    label-for="input-1"
+                  >
+                    <b-time
+                      v-model="taskForm.durationToTime"
+                      locale="en"
+                    ></b-time>
+                  </b-form-group>
+                </b-col>
+              </b-row>
+              <b-button
+                @click="submitDataTask"
+                :disabled="selected.length === 0"
+                variant="primary"
+                style="width: 100%"
+                pill
+                >Submit</b-button
+              >
+            </b-card-body>
+          </b-collapse>
+        </b-card>
+      </div>
     </b-modal>
 
-    <!-- MODAL VIEW WORKSPACE -->
+    <!-- MODAL VIEW & UPDATE WORKSPACE -->
     <b-modal
       id="modal-view-data"
       title="View Workspace & Task"
@@ -175,6 +305,9 @@
       ok-only
       size="huge"
     >
+      <b-alert :variant="alertVariantUpdateTask" :show="showAlertUpdateTask">
+        {{ alertMsgUpdateTask }}
+      </b-alert>
       <b-row>
         <b-col lg="6">
           <b-input-group size="md">
@@ -266,16 +399,14 @@
       <!-- CREATE NEW WORKSPACE -->
       <b-col>
         <b-card
-          :title="'Create Workspace (' + workspaceList.length + ')'"
-          img-src="https://picsum.photos/600/300/?image=20"
-          img-alt="Image"
-          img-top
-          tag="article"
-          class="mb-2"
+          :title="'Create Workspace'"
+          :sub-title="'Currently, ' + workspaceList.length + ' workspaces.'"
+          class="mb-2 h-100"
         >
           <b-card-text>
-            Create your workspace here, it is compulsary to create a workspace before creating a task.
-            Currently, you have {{ workspaceList.length }} workspaces.
+            Create your workspace here, it is compulsary to create a workspace
+            before creating a task. Currently, you have
+            {{ workspaceList.length }} workspaces.
           </b-card-text>
 
           <b-button v-b-modal.modal-create-workspace variant="primary"
@@ -287,15 +418,13 @@
       <!-- CREATE NEW TASK -->
       <b-col>
         <b-card
-          :title="'Create Task (' + tasksList.length + ')'"
-          img-src="https://picsum.photos/600/300/?image=20"
-          img-alt="Image"
-          img-top
-          tag="article"
-          class="mb-2"
+          :title="'Create Task'"
+          :sub-title="'Currently, ' + tasksList.length + ' tasks created.'"
+          class="mb-2 h-100"
         >
           <b-card-text>
-            Create your task here. Currently, you have {{ tasksList.length }} tasks.
+            Create your task here. Currently, you have
+            {{ tasksList.length }} tasks.
           </b-card-text>
 
           <b-button v-b-modal.modal-create-task variant="primary">Go</b-button>
@@ -306,15 +435,12 @@
       <b-col>
         <b-card
           title="View Workspace & Task"
-          img-src="https://picsum.photos/600/300/?image=20"
-          img-alt="Image"
-          img-top
-          tag="article"
-          class="mb-2"
+          :sub-title="'View in-depth.'"
+          class="mb-2 h-100"
         >
           <b-card-text>
-            Some quick example text to build on the card title and make up the
-            bulk of the card's content.
+            Currently you have, {{ workspaceList.length }} workspaces &
+            {{ tasksList.length }} tasks.
           </b-card-text>
 
           <b-button v-b-modal.modal-view-data variant="primary">Go</b-button>
@@ -352,23 +478,38 @@ export default {
   },
   data() {
     return {
+      min: null,
+      max: null,
+
       totalRows: 1,
       filter: null,
       currentPage: 1,
       perPage: 3,
       pageOptions: [3, 25, 50, 100],
 
+      totalRowsTask: 1,
+      filterTask: null,
+      currentPageTask: 1,
+      perPageTask: 3,
+      pageOptionsTask: [3, 25, 50, 100],
+
       checked: [],
 
       selectMode: "single",
       selected: [],
       isBusy: false,
+
       alertMsg: null,
       showAlert: false,
       alertVariant: null,
+
       alertMsgTask: null,
       showAlertTask: false,
       alertVariantTask: null,
+
+      alertMsgUpdateTask: null,
+      showAlertUpdateTask: false,
+      alertVariantUpdateTask: null,
       workspaceForm: {
         name: "",
       },
@@ -399,6 +540,7 @@ export default {
       fieldsTask: [
         {
           key: "workspaceName",
+          sortable: true,
         },
         {
           key: "taskName",
@@ -465,8 +607,19 @@ export default {
   async created() {
     await this.getWorkspaces();
     await this.getTasks();
+    this.blockDate();
   },
   methods: {
+    blockDate() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const minDate = new Date(today);
+      minDate.setMonth(minDate.getMonth());
+      minDate.setDate(now.getDate());
+
+      // this.max = minDate
+      this.min = minDate;
+    },
     snitched(val) {
       console.log(val);
       if (!this.selectedVal.includes(val)) this.selectedVal.push(val);
@@ -476,6 +629,11 @@ export default {
       // Trigger pagination to update the number of buttons/pages due to filtering
       this.totalRows = filteredItems.length;
       this.currentPage = 1;
+    },
+    onFilteredTask(filteredItems) {
+      // Trigger pagination to update the number of buttons/pages due to filtering
+      this.totalRowsTask = filteredItems.length;
+      this.currentPageTask = 1;
     },
     onRowSelected(items) {
       this.selected = items;
@@ -558,6 +716,8 @@ export default {
                   timeLeft:
                     moment.duration(endTime.diff(loaaa))._data.days +
                     " days, " +
+                    moment.duration(endTime.diff(loaaa))._data.hours +
+                    " hours, " +
                     moment.duration(endTime.diff(loaaa))._data.minutes +
                     " minutes remaining.",
                 }
@@ -570,6 +730,7 @@ export default {
               this.checked[i] = true;
             }
             this.totalRows = this.tasksList.length;
+            this.totalRowsTask = this.workspaceList.length;
           }
 
           // var start = moment(res.data[0].taskDurationFrom, "YYYY-MM-DD")
@@ -670,48 +831,45 @@ export default {
     },
     async updateTask() {
       for (let z = 0; z < this.selectedVal.length; z++) {
-
-
-      var data = JSON.stringify({
-        task_status: "COMPLETED",
-        task_completion_datetime: moment(new Date().toLocaleString()).format(
-          "YYYY-MM-DD hh:mm:ss"
-        ),
-        test_hantar_stringify: JSON.stringify(this.selectedVal[z])
-      });
-
-      var config = {
-        method: "put",
-        mode: "cors",
-        url: `/update-workspace-task/` + this.selectedVal[z],
-        headers: {
-          "Content-type": "application/json",
-        },
-        data: data,
-      };
-
-      await axios(config)
-        .then(
-          function (response) {
-            if (response.data[0] === "Success") {
-              this.alertVariant = "success";
-              this.showAlert = true;
-              this.alertMsg = response.data[1];
-              this.isBusy = false;
-              this.getTasks();
-            } else if (response.data[0] === "Failed") {
-              this.alertVariant = "danger";
-              this.showAlert = true;
-              this.alertMsg = response.data[1];
-              this.isBusy = false;
-            }
-          }.bind(this)
-        )
-        .catch((err) => {
-          console.log(err);
+        var data = JSON.stringify({
+          task_status: "COMPLETED",
+          task_completion_datetime: moment(new Date().toLocaleString()).format(
+            "YYYY-MM-DD hh:mm:ss"
+          ),
+          test_hantar_stringify: JSON.stringify(this.selectedVal[z]),
         });
 
-        }
+        var config = {
+          method: "put",
+          mode: "cors",
+          url: `/update-workspace-task/` + this.selectedVal[z],
+          headers: {
+            "Content-type": "application/json",
+          },
+          data: data,
+        };
+
+        await axios(config)
+          .then(
+            function (response) {
+              if (response.data[0] === "Success") {
+                this.alertVariantUpdateTask = "success";
+                this.showAlertUpdateTask = true;
+                this.alertMsgUpdateTask = response.data[1];
+                this.isBusy = false;
+                this.getTasks();
+              } else if (response.data[0] === "Failed") {
+                this.alertVariantUpdateTask = "danger";
+                this.showAlertUpdateTask = true;
+                this.alertMsgUpdateTask = response.data[1];
+                this.isBusy = false;
+              }
+            }.bind(this)
+          )
+          .catch((err) => {
+            console.log(err);
+          });
+      }
     },
   },
 };
