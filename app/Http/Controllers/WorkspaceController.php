@@ -74,6 +74,15 @@ class WorkspaceController extends Controller
 
     public function updateDataTask($id, Request $request) {
         // dd($request->all());
+
+        // $findData = Task::findOrFail($id);
+        // $findData->taskStatus = $request->get('task_status');
+        // $findData->taskCompletionDatetime = $request->get('task_completion_datetime');
+
+        // $findData->save();
+        // $status = 'Success';
+        // $message = 'Task for a workspace is updated!';
+
         if ($request->get('task_completion_datetime') !== null) {
             $findData = Task::findOrFail($id);
 

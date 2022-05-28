@@ -31,7 +31,7 @@
         </b-col>
       </b-row>
 
-      <b-button @click="submitData" :disabled="workspaceForm.name.length < 4"
+      <b-button @click="submitData" :disabled="workspaceForm.name.length < 4" variant="primary" pill style="width: 100%"
         >Submit</b-button
       >
     </b-modal>
@@ -41,9 +41,21 @@
       id="modal-create-task"
       title="Create Task"
       centered
-      size="xl"
+      size="lg"
       hide-footer
     >
+      <b-alert show variant="success">
+        <h4 class="alert-heading">Steps to create task</h4>
+        <p>
+          1. Choose one of the workspace that you have created.<br>
+          2. Enter your desired task name, task start and end datetime. <br>
+          3. Lastly, click submit and you're good to go!
+        </p>
+        <hr />
+        <p class="mb-0">
+          The button for submit will only be enabled if all of the fields is filled in.
+        </p>
+      </b-alert>
       <b-alert :variant="alertVariantTask" :show="showAlertTask">{{
         alertMsgTask
       }}</b-alert>
@@ -150,7 +162,7 @@
           </b-form-group>
         </b-col>
       </b-row>
-      <b-button @click="submitDataTask" :disabled="selected.length === 0"
+      <b-button @click="submitDataTask" :disabled="selected.length === 0" variant="primary" style="width: 100%" pill
         >Submit</b-button
       >
     </b-modal>
@@ -229,8 +241,13 @@
         </template>
 
         <template #cell(action)="data">
-          <b-form-checkbox v-model="checked[data.item.idx]" name="check-button" switch @change="snitched(data.item.id_task)"
-          :disabled="tasksList[data.item.idx].taskStatus === 'COMPLETED'">
+          <b-form-checkbox
+            v-model="checked[data.item.idx]"
+            name="check-button"
+            switch
+            @change="snitched(data.item.id_task)"
+            :disabled="tasksList[data.item.idx].taskStatus === 'COMPLETED'"
+          >
             <!-- Switch Checkbox <b>(Checked: {{ checked }})</b> -->
           </b-form-checkbox>
         </template>
@@ -249,7 +266,7 @@
       <!-- CREATE NEW WORKSPACE -->
       <b-col>
         <b-card
-          title="Create Workspace"
+          :title="'Create Workspace (' + workspaceList.length + ')'"
           img-src="https://picsum.photos/600/300/?image=20"
           img-alt="Image"
           img-top
@@ -257,8 +274,8 @@
           class="mb-2"
         >
           <b-card-text>
-            Some quick example text to build on the card title and make up the
-            bulk of the card's content.
+            Create your workspace here, it is compulsary to create a workspace before creating a task.
+            Currently, you have {{ workspaceList.length }} workspaces.
           </b-card-text>
 
           <b-button v-b-modal.modal-create-workspace variant="primary"
@@ -270,7 +287,7 @@
       <!-- CREATE NEW TASK -->
       <b-col>
         <b-card
-          title="Create Task"
+          :title="'Create Task (' + tasksList.length + ')'"
           img-src="https://picsum.photos/600/300/?image=20"
           img-alt="Image"
           img-top
@@ -278,8 +295,7 @@
           class="mb-2"
         >
           <b-card-text>
-            Some quick example text to build on the card title and make up the
-            bulk of the card's content.
+            Create your task here. Currently, you have {{ tasksList.length }} tasks.
           </b-card-text>
 
           <b-button v-b-modal.modal-create-task variant="primary">Go</b-button>
@@ -413,7 +429,7 @@ export default {
         {
           key: "action",
           label: "Action",
-        }
+        },
       ],
       fields: [
         {
@@ -443,7 +459,7 @@ export default {
       ],
       workspaceList: [],
       tasksList: [],
-      selectedVal: []
+      selectedVal: [],
     };
   },
   async created() {
@@ -452,11 +468,9 @@ export default {
   },
   methods: {
     snitched(val) {
-        console.log(val)
-        if (!this.selectedVal.includes(val))
-            this.selectedVal.push(val)
-        else if (this.selectedVal.includes(val))
-            this.selectedVal.pop(val)
+      console.log(val);
+      if (!this.selectedVal.includes(val)) this.selectedVal.push(val);
+      else if (this.selectedVal.includes(val)) this.selectedVal.pop(val);
     },
     onFiltered(filteredItems) {
       // Trigger pagination to update the number of buttons/pages due to filtering
@@ -502,9 +516,9 @@ export default {
         .get("/api/get-workspace-task-list")
         .then((res) => {
           console.log(res.data);
-          var count = 0
+          var count = 0;
           for (let i = 0; i < res.data.length; i++) {
-            this.checked.push(false)
+            this.checked.push(false);
 
             // var start = moment(new Date().toISOString().slice(0, 10), "YYYY-MM-DD")
             // var end = moment(res.data[i].taskDurationTo, "YYYY-MM-DD")
@@ -533,7 +547,13 @@ export default {
                   taskDurationTo: this.format_date(res.data[i].taskDurationTo),
                 },
                 { taskStatus: res.data[i].taskStatus },
-                { taskCompletionDatetime: res.data[i].taskCompletionDatetime },
+                {
+                  taskCompletionDatetime: this.format_date(
+                    res.data[i].taskCompletionDatetime
+                  )
+                    ? this.format_date(res.data[i].taskCompletionDatetime)
+                    : "NO DATE",
+                },
                 {
                   timeLeft:
                     moment.duration(endTime.diff(loaaa))._data.days +
@@ -544,12 +564,12 @@ export default {
               )
             );
 
-            if (this.tasksList[i].taskStatus === 'INCOMPLETE') {
-                this.checked[i] = false
+            if (this.tasksList[i].taskStatus === "INCOMPLETE") {
+              this.checked[i] = false;
             } else {
-                this.checked[i] = true
+              this.checked[i] = true;
             }
-            this.totalRows = this.tasksList.length
+            this.totalRows = this.tasksList.length;
           }
 
           // var start = moment(res.data[0].taskDurationFrom, "YYYY-MM-DD")
@@ -649,15 +669,21 @@ export default {
         });
     },
     async updateTask() {
+      for (let z = 0; z < this.selectedVal.length; z++) {
+
+
       var data = JSON.stringify({
         task_status: "COMPLETED",
-        task_completion_datetime: moment(new Date().toLocaleString()).format("YYYY-MM-DD hh:mm:ss"),
+        task_completion_datetime: moment(new Date().toLocaleString()).format(
+          "YYYY-MM-DD hh:mm:ss"
+        ),
+        test_hantar_stringify: JSON.stringify(this.selectedVal[z])
       });
 
       var config = {
         method: "put",
         mode: "cors",
-        url: `/update-workspace-task/` + this.selectedVal[0],
+        url: `/update-workspace-task/` + this.selectedVal[z],
         headers: {
           "Content-type": "application/json",
         },
@@ -684,6 +710,8 @@ export default {
         .catch((err) => {
           console.log(err);
         });
+
+        }
     },
   },
 };
