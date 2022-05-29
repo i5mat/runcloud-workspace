@@ -934,6 +934,7 @@ export default {
             console.log(err);
           });
       }
+      this.selectedVal.length = 0
     },
   },
 };
