@@ -198,11 +198,7 @@
               >Click me to insert new task!</b-button
             >
           </b-card-header>
-          <b-collapse
-            id="accordion-1"
-            accordion="my-accordion"
-            role="tabpanel"
-          >
+          <b-collapse id="accordion-1" accordion="my-accordion" role="tabpanel">
             <b-card-body>
               <b-row>
                 <b-col>
@@ -373,6 +369,17 @@
           <b-badge variant="danger" v-else>{{ data.item.taskStatus }}</b-badge>
         </template>
 
+        <template #cell(timeLeft)="data">
+          <b-badge
+            variant="warning"
+            v-if="data.item.timeLeft === 'OVERDUE'"
+            >{{ data.item.timeLeft }}
+          </b-badge>
+          <span v-else>
+              {{ data.item.timeLeft }}
+          </span>
+        </template>
+
         <template #cell(action)="data">
           <b-form-checkbox
             v-model="checked[data.item.idx]"
@@ -392,7 +399,7 @@
         class="float-right"
       ></b-pagination>
 
-      <b-button @click="updateTask" variant="primary">Submit</b-button>
+      <b-button @click="updateTask" variant="primary" :disabled="selectedVal.length === 0">Submit</b-button>
     </b-modal>
 
     <b-row>
@@ -569,6 +576,9 @@ export default {
           label: "Completed Date",
         },
         {
+          key: "timeCompleted",
+        },
+        {
           key: "action",
           label: "Action",
         },
@@ -610,8 +620,9 @@ export default {
     this.blockDate();
 
     // window.location.href = "https://rc-assessment.herokuapp.com/workspace-home";
-    if (this.$router.history.current.path !== '/workspace-home') {
-      window.location.href = "https://rc-assessment.herokuapp.com/workspace-home";
+    if (this.$router.history.current.path !== "/workspace-home") {
+      window.location.href =
+        "https://rc-assessment.herokuapp.com/workspace-home";
     }
   },
   methods: {
@@ -691,43 +702,91 @@ export default {
               res.data[i].taskDurationTo,
               "YYYY-MM-DD hh:mm:ss"
             );
+            var timeCompleted = moment(
+              res.data[i].taskCompletionDatetime,
+              "YYYY-MM-DD hh:mm:ss"
+            );
 
             var loaaa = moment().format("YYYY-MM-DD hh:mm:ss");
-            console.log(moment.duration(endTime.diff(loaaa)));
-
-            this.tasksList.push(
-              Object.assign(
-                { idx: count++ },
-                { id_task: res.data[i].id },
-                { workspaceName: res.data[i].workspaceName },
-                { taskName: res.data[i].taskName },
-                {
-                  taskDurationFrom: this.format_date(
-                    res.data[i].taskDurationFrom
-                  ),
-                },
-                {
-                  taskDurationTo: this.format_date(res.data[i].taskDurationTo),
-                },
-                { taskStatus: res.data[i].taskStatus },
-                {
-                  taskCompletionDatetime: this.format_date(
-                    res.data[i].taskCompletionDatetime
-                  )
-                    ? this.format_date(res.data[i].taskCompletionDatetime)
-                    : "NO DATE",
-                },
-                {
-                  timeLeft:
-                    moment.duration(endTime.diff(loaaa))._data.days +
-                    " days, " +
-                    moment.duration(endTime.diff(loaaa))._data.hours +
-                    " hours, " +
-                    moment.duration(endTime.diff(loaaa))._data.minutes +
-                    " minutes remaining.",
-                }
-              )
-            );
+            if (moment.duration(endTime.diff(loaaa))._data.minutes < 0) {
+              this.tasksList.push(
+                Object.assign(
+                  { idx: count++ },
+                  { id_task: res.data[i].id },
+                  { workspaceName: res.data[i].workspaceName },
+                  { taskName: res.data[i].taskName },
+                  {
+                    taskDurationFrom: this.format_date(
+                      res.data[i].taskDurationFrom
+                    ),
+                  },
+                  {
+                    taskDurationTo: this.format_date(
+                      res.data[i].taskDurationTo
+                    ),
+                  },
+                  { taskStatus: res.data[i].taskStatus },
+                  {
+                    taskCompletionDatetime: this.format_date(
+                      res.data[i].taskCompletionDatetime
+                    )
+                      ? this.format_date(res.data[i].taskCompletionDatetime)
+                      : "NO DATE",
+                  },
+                  {
+                    timeLeft: "OVERDUE",
+                  },
+                  {
+                    timeCompleted: "Cannot determine as it was overdue.",
+                  }
+                )
+              );
+            } else {
+              this.tasksList.push(
+                Object.assign(
+                  { idx: count++ },
+                  { id_task: res.data[i].id },
+                  { workspaceName: res.data[i].workspaceName },
+                  { taskName: res.data[i].taskName },
+                  {
+                    taskDurationFrom: this.format_date(
+                      res.data[i].taskDurationFrom
+                    ),
+                  },
+                  {
+                    taskDurationTo: this.format_date(
+                      res.data[i].taskDurationTo
+                    ),
+                  },
+                  { taskStatus: res.data[i].taskStatus },
+                  {
+                    taskCompletionDatetime: this.format_date(
+                      res.data[i].taskCompletionDatetime
+                    )
+                      ? this.format_date(res.data[i].taskCompletionDatetime)
+                      : "NO DATE",
+                  },
+                  {
+                    timeLeft:
+                      moment.duration(endTime.diff(loaaa))._data.days +
+                      " days, " +
+                      moment.duration(endTime.diff(loaaa))._data.hours +
+                      " hours, " +
+                      moment.duration(endTime.diff(loaaa))._data.minutes +
+                      " minutes remaining.",
+                  },
+                  {
+                    timeCompleted:
+                      moment.duration(timeCompleted.diff(loaaa))._data.days +
+                      " days ago, " +
+                      moment.duration(timeCompleted.diff(loaaa))._data.hours +
+                      " hours ago, " +
+                      Math.abs(moment.duration(timeCompleted.diff(loaaa))._data.minutes) +
+                      " minutes ago.",
+                  }
+                )
+              );
+            }
 
             if (this.tasksList[i].taskStatus === "INCOMPLETE") {
               this.checked[i] = false;
