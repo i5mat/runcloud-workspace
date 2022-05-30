@@ -731,10 +731,6 @@ export default {
           for (let i = 0; i < res.data.length; i++) {
             this.checked.push(false);
 
-            // var start = moment(new Date().toISOString().slice(0, 10), "YYYY-MM-DD")
-            // var end = moment(res.data[i].taskDurationTo, "YYYY-MM-DD")
-
-            // var startTime = moment(res.data[i].taskDurationFrom, "YYYY-MM-DD hh:mm:ss")
             var endTime = moment(
               res.data[i].taskDurationTo,
               "YYYY-MM-DD hh:mm:ss"
@@ -814,9 +810,9 @@ export default {
                   },
                   {
                     timeCompleted:
-                      moment.duration(timeCompleted.diff(loaaa))._data.days +
+                      Math.abs(moment.duration(timeCompleted.diff(loaaa))._data.days) +
                       " days ago, " +
-                      moment.duration(timeCompleted.diff(loaaa))._data.hours +
+                      Math.abs(moment.duration(timeCompleted.diff(loaaa))._data.hours) +
                       " hours ago, " +
                       Math.abs(
                         moment.duration(timeCompleted.diff(loaaa))._data.minutes
@@ -836,14 +832,6 @@ export default {
             this.totalRowsTask = this.workspaceList.length;
             this.showTasks = false;
           }
-
-          // var start = moment(res.data[0].taskDurationFrom, "YYYY-MM-DD")
-          // var end = moment(res.data[0].taskDurationTo, "YYYY-MM-DD")
-          // console.log(moment.duration(end.diff(start)).asDays())
-
-          // var startTime = moment(res.data[0].taskDurationFrom, "hh:mm:ss")
-          // var endTime = moment(res.data[0].taskDurationTo, "hh:mm:ss")
-          // console.log(moment.duration(endTime.diff(startTime)).asMinutes())
 
           this.isBusy = false;
         })
@@ -992,7 +980,7 @@ export default {
 
 <style>
 .modal .modal-huge {
-  max-width: 1700px;
-  width: 1700px;
+  max-width: 1200px;
+  width: 1200px;
 }
 </style>
