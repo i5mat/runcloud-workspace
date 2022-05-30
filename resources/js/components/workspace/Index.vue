@@ -121,9 +121,6 @@
             filled in.
           </p>
         </b-alert>
-        <b-alert :variant="alertVariantTask" :show="showAlertTask">{{
-          alertMsgTask
-        }}</b-alert>
         <b-row>
           <b-col lg="6">
             <b-input-group size="md">
@@ -219,6 +216,9 @@
               role="tabpanel"
             >
               <b-card-body>
+                <b-alert :variant="alertVariantTask" :show="showAlertTask">{{
+                  alertMsgTask
+                }}</b-alert>
                 <b-row>
                   <b-col>
                     <b-form-group
@@ -810,9 +810,13 @@ export default {
                   },
                   {
                     timeCompleted:
-                      Math.abs(moment.duration(timeCompleted.diff(loaaa))._data.days) +
+                      Math.abs(
+                        moment.duration(timeCompleted.diff(loaaa))._data.days
+                      ) +
                       " days ago, " +
-                      Math.abs(moment.duration(timeCompleted.diff(loaaa))._data.hours) +
+                      Math.abs(
+                        moment.duration(timeCompleted.diff(loaaa))._data.hours
+                      ) +
                       " hours ago, " +
                       Math.abs(
                         moment.duration(timeCompleted.diff(loaaa))._data.minutes
@@ -885,51 +889,66 @@ export default {
     async submitDataTask() {
       this.loading = true;
       this.show = true;
-      var data = JSON.stringify({
-        task_from_date: this.taskForm.durationFromDate,
-        task_from_time: this.taskForm.durationFromTime,
-        task_to_date: this.taskForm.durationToDate,
-        task_to_time: this.taskForm.durationToTime,
-        task_name: this.taskForm.name,
-        task_status: "INCOMPLETE",
-        userid: this.taskForm.userId,
-        workspaceid: this.taskForm.workspaceId,
-      });
 
-      var config = {
-        method: "post",
-        mode: "cors",
-        url: `/insert-workspace-task`,
-        headers: {
-          "Content-type": "application/json",
-        },
-        data: data,
-      };
+      var getStart = this.taskForm.durationFromDate + " " + this.taskForm.durationFromTime;
+      var getEnd = this.taskForm.durationToDate + " " + this.taskForm.durationToTime;
+    //   console.log(moment(getEnd).isAfter(getStart));
+    //   console.log(moment('2022-05-30 04:00:00').isAfter('2022-05-30 02:00:00'))
+    //   console.log(moment().format('hh:mm:ss'))
 
-      await axios(config)
-        .then(
-          function (response) {
-            if (response.data[0] === "Success") {
-              this.alertVariantTask = "success";
-              this.showAlertTask = true;
-              this.alertMsgTask = response.data[1];
-              this.isBusy = false;
-              this.$refs["my-task-modal"].hide();
-              this.$refs["my-view-workspacetask-modal"].show();
-              this.show = false;
-              this.getTasks();
-            } else if (response.data[0] === "Failed") {
-              this.alertVariantTask = "danger";
-              this.showAlertTask = true;
-              this.alertMsgTask = response.data[1];
-              this.isBusy = false;
-              this.show = false;
-            }
-          }.bind(this)
-        )
-        .catch((err) => {
-          console.log(err);
+      if (moment(getEnd).isAfter(getStart) === false) {
+        this.alertVariantTask = "danger";
+        this.showAlertTask = true;
+        this.alertMsgTask = "Datetime of end have to be greater than start! 🙏";
+        this.isBusy = false;
+        this.show = false;
+      } else if (moment(getEnd).isAfter(getStart) === true) {
+        var data = JSON.stringify({
+          task_from_date: this.taskForm.durationFromDate,
+          task_from_time: this.taskForm.durationFromTime,
+          task_to_date: this.taskForm.durationToDate,
+          task_to_time: this.taskForm.durationToTime,
+          task_name: this.taskForm.name,
+          task_status: "INCOMPLETE",
+          userid: this.taskForm.userId,
+          workspaceid: this.taskForm.workspaceId,
         });
+
+        var config = {
+          method: "post",
+          mode: "cors",
+          url: `/insert-workspace-task`,
+          headers: {
+            "Content-type": "application/json",
+          },
+          data: data,
+        };
+
+        await axios(config)
+          .then(
+            function (response) {
+              if (response.data[0] === "Success") {
+                this.alertVariantTask = "success";
+                this.showAlertTask = true;
+                this.alertMsgTask = response.data[1];
+                this.isBusy = false;
+                this.$refs["my-task-modal"].hide();
+                this.$refs["my-view-workspacetask-modal"].show();
+                this.show = false;
+                this.getTasks();
+              } else if (response.data[0] === "Failed") {
+                this.alertVariantTask = "danger";
+                this.showAlertTask = true;
+                this.alertMsgTask = response.data[1];
+                this.isBusy = false;
+                this.show = false;
+              }
+            }.bind(this)
+          )
+          .catch((err) => {
+            console.log(err);
+          });
+      }
     },
     async updateTask() {
       for (let z = 0; z < this.selectedVal.length; z++) {
